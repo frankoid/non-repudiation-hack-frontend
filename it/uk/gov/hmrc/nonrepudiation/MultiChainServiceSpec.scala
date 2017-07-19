@@ -19,14 +19,18 @@ package uk.gov.hmrc.nonrepudiation
 import java.time.Month
 import java.util.UUID
 
+import org.scalatest.concurrent.Eventually
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.test.WsTestClient
 import uk.gov.hmrc.nonrepudiationhackfrontend.models.Event
 import uk.gov.hmrc.play.test.UnitSpec
 
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-class MultiChainServiceSpec extends UnitSpec with WsTestClient with OneAppPerSuite {
+class MultiChainServiceSpec extends UnitSpec with WsTestClient with OneAppPerSuite with Eventually {
+
+  override implicit def patienceConfig: PatienceConfig = PatienceConfig(timeout = 60 seconds)
 
   val multiChainService = app.injector.instanceOf(classOf[MultiChainService])
 
@@ -37,16 +41,18 @@ class MultiChainServiceSpec extends UnitSpec with WsTestClient with OneAppPerSui
 
         await(multiChainService.publishEvent(Event(uniqueString,None)))
 
-        await(multiChainService.list()) match {
-          case Failure(e) =>
-            fail(s"Failed: ${e.getMessage}")
-          case Success(events) =>
-            events.map(_.data) should contain(uniqueString)
-            events.foreach { event =>
-              event.timestamp should not be None
+        eventually {
+          await(multiChainService.list()) match {
+            case Failure(e) =>
+              fail(s"Failed: ${e.getMessage}")
+            case Success(events) =>
+              val ourEvents = events.filter(_.data == uniqueString)
+              ourEvents.size shouldBe 1
+              val ourEvent = ourEvents.head
+              ourEvent.timestamp should not be None
               // ensure time is being converted correcly - blocktime contains seconds not millis
-              event.timestamp.get.getYear should be >= 2017
-            }
+              ourEvent.timestamp.get.getYear should be >= 2017
+          }
         }
       }
     }
