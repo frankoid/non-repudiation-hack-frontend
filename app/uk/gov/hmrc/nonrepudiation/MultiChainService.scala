@@ -47,7 +47,7 @@ class MultiChainService @Inject()(ws: WSClient,config:Configuration)(implicit ec
           jsVal =>
             (jsVal \ "data").asOpt[String].map(encodedData => Event(
               data = MultiChainService.decodeHex(encodedData),
-              timestamp = Some(blocktimeToLocalDateTime((jsVal \ "blocktime").as[Long]))))
+              timestamp = (jsVal \ "blocktime").asOpt[Long].map(blocktimeToLocalDateTime)))
         }
       )
 
