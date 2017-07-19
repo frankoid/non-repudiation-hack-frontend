@@ -23,7 +23,7 @@
         <button v-on="click: getEvents">GET EVENTS</button>
         <ul>
             <li v-repeat="items" class="item-{{$index}}">
-                {{$index}} - {{data}} --- {{timestamp}}
+                {{$index}} - {{data}} --- {{blocktime}}
             </li>
         </ul>
     </div>
@@ -37,10 +37,11 @@
         methods: {
             getEvents: function(e) {
                 this.$http.get('/non-rep/events').then(response => {
+                    console.log(response.body)
                     this.$data.items = response.body
 
                 }, response => {
-                    // error callback
+                    console.log(response)
                 });
             }
           }
