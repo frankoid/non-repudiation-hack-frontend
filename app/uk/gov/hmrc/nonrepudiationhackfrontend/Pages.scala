@@ -23,10 +23,14 @@ import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
 
 
-object HelloWorld extends HelloWorld
+object Pages extends Pages
 
-trait HelloWorld extends FrontendController {
-  val helloWorld = Action.async { implicit request =>
-		Future.successful(Ok(uk.gov.hmrc.nonrepudiationhackfrontend.views.html.helloworld.hello_world()))
+trait Pages extends FrontendController {
+  val writer = Action.async { implicit request =>
+		Future.successful(Ok(uk.gov.hmrc.nonrepudiationhackfrontend.views.html.pages.writer()))
+  }
+
+  def reader = Action.async { implicit request =>
+    Future.successful(Ok(uk.gov.hmrc.nonrepudiationhackfrontend.views.html.pages.reader()))
   }
 }

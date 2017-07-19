@@ -1,4 +1,4 @@
-@*
+/*
  * Copyright 2017 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *@
+ */
 
-@()(implicit request: Request[_], messages: Messages))
+package uk.gov.hmrc.nonrepudiationhackfrontend.models
 
-@uk.gov.hmrc.nonrepudiationhackfrontend.views.html.main_template(title = "Hello from non-repudiation-hack-frontend", bodyClasses = None) {
-    <h1>Hello from non-repudiation-hack-frontend !</h1>
+import java.time.LocalDateTime
+import play.api.libs.json.Json
+
+case class Event(key:String, data:String, timestamp:Option[LocalDateTime])
+object Event{
+  implicit val format = Json.format[Event]
 }
