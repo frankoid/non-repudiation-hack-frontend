@@ -26,7 +26,10 @@ import play.api.libs.ws.{WSAuthScheme, WSClient, WSResponse}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class MultiChainService @Inject()(ws: WSClient, url: String, username: String, password: String, streamName: String)(implicit ec: ExecutionContext) {
+class MultiChainService @Inject()(ws: WSClient, url: String, username: String, password: String)(implicit ec: ExecutionContext) {
+
+  // we intend that the streamName will become and argument to list() and publishEvent later
+  val streamName = "streamX"
 
   def list(): Future[Seq[Event]] =
     jsonRpc("liststreamitems", List(streamName)).map { resp =>
