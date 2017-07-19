@@ -18,23 +18,30 @@ package uk.gov.hmrc.nonrepudiation
 
 import java.util.UUID
 
+import org.scalatestplus.play.OneAppPerSuite
 import play.api.test.WsTestClient
+import uk.gov.hmrc.nonrepudiationhackfrontend.models.Event
 import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success}
 
-class MultiChainServiceSpec extends UnitSpec with WsTestClient {
+class MultiChainServiceSpec extends UnitSpec with WsTestClient with OneAppPerSuite{
+
+  val multiChainService = app.injector.instanceOf(classOf[MultiChainService])
 
   "list" should {
     "list published events" in {
       withClient { wsClient =>
         val uniqueString = UUID.randomUUID().toString
-        val multiChainService = new MultiChainService(wsClient, "http://localhost:4272", "multichainrpc", "CoxcdVSWVBP9TR52V3Kmddm8jvzmNHn1VPPWfca6dSQb")
 
-        await(multiChainService.publishEvent(Event(uniqueString)))
+        await(multiChainService.publishEvent(Event(uniqueString,None)))
 
-        val events: Seq[Event] = await(multiChainService.list())
-        events should contain(Event(uniqueString))
+        await(multiChainService.list()) match {
+          case Failure(e) =>
+            fail(s"Failed: ${e.getMessage}")
+          case Success(events) =>
+            events should contain(Event(uniqueString,None))
+        }
       }
     }
   }

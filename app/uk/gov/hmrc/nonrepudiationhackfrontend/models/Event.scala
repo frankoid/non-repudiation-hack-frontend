@@ -19,7 +19,7 @@ package uk.gov.hmrc.nonrepudiationhackfrontend.models
 import java.time.LocalDateTime
 import play.api.libs.json.Json
 
-case class Event(key:String, data:String, timestamp:Option[LocalDateTime])
+case class Event(data:String, timestamp:Option[LocalDateTime])
 object Event{
   implicit val format = Json.format[Event]
 }

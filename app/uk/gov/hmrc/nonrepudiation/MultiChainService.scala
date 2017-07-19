@@ -20,24 +20,32 @@ import java.nio.charset.StandardCharsets
 import javax.inject.{Inject, Singleton}
 
 import org.apache.commons.codec.binary.Hex
+import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSAuthScheme, WSClient, WSResponse}
+import uk.gov.hmrc.nonrepudiationhackfrontend.models.Event
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 @Singleton
-class MultiChainService @Inject()(ws: WSClient, url: String, username: String, password: String)(implicit ec: ExecutionContext) {
+class MultiChainService @Inject()(ws: WSClient,config:Configuration)(implicit ec: ExecutionContext) {
+
+  val url: String = config.underlying.getString("multichain.url")
+  val username: String= config.underlying.getString("multichain.username")
+  val password: String = config.underlying.getString("multichain.password")
 
   // we intend that the streamName will become and argument to list() and publishEvent later
   val streamName = "streamX"
 
-  def list(): Future[Seq[Event]] =
+  def list(): Future[Try[List[Event]]] =
     jsonRpc("liststreamitems", List(streamName)).map { resp =>
-      // asOpt[String] skips results where the data is not a simple string but rather a large object
-      // could be enhanced to go and fetch the large objects instead of skipping them
-      val dataHexes = (resp.json \ "result" \\ "data").flatMap(_.asOpt[String])
-      val datas = dataHexes.map(MultiChainService.decodeHex)
-      datas.map(Event)
+
+      Try((resp.json \ "result").validate[List[Event]].fold(
+        _      => throw new Exception(s"Unable to deserialise json ${resp.json} as Event type"),
+        events => events.map(e => e.copy(data = MultiChainService.decodeHex(e.data)))
+      ))
+
     }
 
   private def jsonRpc(method: String, parameters: List[String]): Future[WSResponse] = {

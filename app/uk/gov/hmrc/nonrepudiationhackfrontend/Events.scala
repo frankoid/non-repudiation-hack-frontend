@@ -17,36 +17,47 @@
 package uk.gov.hmrc.nonrepudiationhackfrontend
 
 import java.time.LocalDateTime
+import javax.inject.{Inject, Singleton}
 
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.Action
+import uk.gov.hmrc.nonrepudiation.MultiChainService
 import uk.gov.hmrc.nonrepudiationhackfrontend.models.Event
 import uk.gov.hmrc.play.frontend.controller.FrontendController
-import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
+import scala.util.control.NonFatal
 
 /**
   * Created by max on 19/07/17.
   */
-class Events extends FrontendController{
+@Singleton
+class Events @Inject() (multiChainService: MultiChainService) extends FrontendController{
 
   def getEvents = Action.async{ implicit request =>
-    Logger.info("Getting Events")
-    Future.successful(
-      Ok(Json.toJson(List(
-        Event("key","mydata",Some(LocalDateTime.now().minusDays(4))),
-        Event("key2","mydata2",Some(LocalDateTime.now().minusDays(3))),
-        Event("key","mydata3",Some(LocalDateTime.now().minusMinutes(132))),
-        Event("key3","mydata4",Some(LocalDateTime.now()))
-      )))
-    )
+    multiChainService.list().map {
+      case Failure(throwable) => InternalServerError(throwable.getMessage)
+      case Success(events) => Ok(Json.toJson(events))
+    }.recover{
+      case NonFatal(e) =>
+        Logger.error(e.getMessage,e)
+        InternalServerError(e.getMessage)
+    }
   }
 
   def addEvent = Action.async{ implicit request =>
-    Logger.info(s"Adding event: ${request.body}")
-    Future.successful(Ok)
+    val result = for {
+      json <- (request.body.asJson toRight BadRequest).right
+      event <- json.validate[Event].asOpt.toRight(BadRequest).right
+    } yield multiChainService.publishEvent(event)
+
+    result.fold(
+      e => Future.successful(e),
+      (eventualUnit: Future[Unit]) => eventualUnit.map(_ => Ok)
+    )
 
   }
 
