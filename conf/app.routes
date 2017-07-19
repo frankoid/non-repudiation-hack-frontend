@@ -2,3 +2,6 @@
 
 GET         /events      @uk.gov.hmrc.nonrepudiationhackfrontend.Events.getEvents
 POST        /events      @uk.gov.hmrc.nonrepudiationhackfrontend.Events.addEvent
+
+GET        /writer             uk.gov.hmrc.nonrepudiationhackfrontend.controllers.Pages.writer
+GET        /reader             uk.gov.hmrc.nonrepudiationhackfrontend.controllers.Pages.reader
