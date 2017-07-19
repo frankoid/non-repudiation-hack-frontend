@@ -17,6 +17,7 @@
 package uk.gov.hmrc.nonrepudiation
 
 import java.nio.charset.StandardCharsets
+import javax.inject.{Inject, Singleton}
 
 import org.apache.commons.codec.binary.Hex
 import play.api.libs.json.Json
@@ -24,7 +25,8 @@ import play.api.libs.ws.{WSAuthScheme, WSClient, WSResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MultiChainService(ws: WSClient,url: String, username: String, password: String, streamName: String)(implicit ec: ExecutionContext) {
+@Singleton
+class MultiChainService @Inject()(ws: WSClient, url: String, username: String, password: String, streamName: String)(implicit ec: ExecutionContext) {
 
   def list(): Future[Seq[Event]] =
     jsonRpc("liststreamitems", List(streamName)).map { resp =>
