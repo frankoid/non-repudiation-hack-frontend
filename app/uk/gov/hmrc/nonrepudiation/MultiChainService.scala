@@ -17,16 +17,17 @@
 package uk.gov.hmrc.nonrepudiation
 
 import java.nio.charset.StandardCharsets
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 import javax.inject.{Inject, Singleton}
 
 import org.apache.commons.codec.binary.Hex
 import play.api.Configuration
-import play.api.libs.json.Json
+import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.{WSAuthScheme, WSClient, WSResponse}
 import uk.gov.hmrc.nonrepudiationhackfrontend.models.Event
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 @Singleton
 class MultiChainService @Inject()(ws: WSClient,config:Configuration)(implicit ec: ExecutionContext) {
@@ -38,15 +39,21 @@ class MultiChainService @Inject()(ws: WSClient,config:Configuration)(implicit ec
   // we intend that the streamName will become and argument to list() and publishEvent later
   val streamName = "streamX"
 
-  def list(): Future[Try[List[Event]]] =
+  def list(): Future[Try[Seq[Event]]] =
     jsonRpc("liststreamitems", List(streamName)).map { resp =>
 
-      Try((resp.json \ "result").validate[List[Event]].fold(
-        _      => throw new Exception(s"Unable to deserialise json ${resp.json} as Event type"),
-        events => events.map(e => e.copy(data = MultiChainService.decodeHex(e.data)))
-      ))
+      Try(
+        (resp.json \ "result").as[JsArray].value.flatMap {
+          jsVal =>
+            (jsVal \ "data").asOpt[String].map(encodedData => Event(
+              data = MultiChainService.decodeHex(encodedData),
+              timestamp = Some(blocktimeToLocalDateTime((jsVal \ "blocktime").as[Long]))))
+        }
+      )
 
     }
+
+  private[nonrepudiation] def blocktimeToLocalDateTime(blocktime: Long): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(blocktime), ZoneOffset.UTC)
 
   private def jsonRpc(method: String, parameters: List[String]): Future[WSResponse] = {
     ws.url(url)

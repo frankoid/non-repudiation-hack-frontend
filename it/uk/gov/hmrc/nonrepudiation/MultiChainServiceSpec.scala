@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.nonrepudiation
 
+import java.time.Month
 import java.util.UUID
 
 import org.scalatestplus.play.OneAppPerSuite
@@ -25,7 +26,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.util.{Failure, Success}
 
-class MultiChainServiceSpec extends UnitSpec with WsTestClient with OneAppPerSuite{
+class MultiChainServiceSpec extends UnitSpec with WsTestClient with OneAppPerSuite {
 
   val multiChainService = app.injector.instanceOf(classOf[MultiChainService])
 
@@ -40,7 +41,12 @@ class MultiChainServiceSpec extends UnitSpec with WsTestClient with OneAppPerSui
           case Failure(e) =>
             fail(s"Failed: ${e.getMessage}")
           case Success(events) =>
-            events should contain(Event(uniqueString,None))
+            events.map(_.data) should contain(uniqueString)
+            events.foreach { event =>
+              event.timestamp should not be None
+              // ensure time is being converted correcly - blocktime contains seconds not millis
+              event.timestamp.get.getYear should be >= 2017
+            }
         }
       }
     }
@@ -52,4 +58,14 @@ class MultiChainServiceSpec extends UnitSpec with WsTestClient with OneAppPerSui
       decodeHex(encodeHex("Hello world!")) shouldBe "Hello world!"
     }
   }
+
+  "blocktimeToLocalDateTime" should {
+    "convert time correctly" in {
+      val converted = multiChainService.blocktimeToLocalDateTime(1500462968)
+      converted.getYear shouldBe 2017
+      converted.getMonth shouldBe Month.JULY
+      converted.getDayOfMonth shouldBe 19
+    }
+  }
+
 }
