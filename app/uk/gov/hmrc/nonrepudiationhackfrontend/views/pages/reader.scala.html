@@ -18,5 +18,27 @@
 
 @uk.gov.hmrc.nonrepudiationhackfrontend.views.html.main_template(title = "Hello from non-repudiation-hack-frontend", bodyClasses = None) {
     <h1>HMRC blockchain reader</h1>
-foo bar42
+    <button id="doGet">GET EVENTS</button>
+    <ul id="demo">
+        <li v-repeat="items" class="item-{{$index}}">
+            {{$index}} - {{parentMsg}} {{childMsg}}
+        </li>
+    </ul>
+
+    <script>
+     <!--jQuery.get( "/non-rep/events", function(data) {-->
+       <!--console.log(data)-->
+     <!--});-->
+
+     var demo = new Vue({
+      el: '#demo',
+      data: {
+        parentMsg: 'Hello',
+        items: [
+          { childMsg: 'Foo' },
+          { childMsg: 'Bar' }
+        ]
+      }
+    })
+    </script>
 }
