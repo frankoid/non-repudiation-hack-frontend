@@ -16,7 +16,44 @@
 
 @()(implicit request: Request[_], messages: Messages))
 
+@import views.html.helper._
+
 @uk.gov.hmrc.nonrepudiationhackfrontend.views.html.main_template(title = "Hello from non-repudiation-hack-frontend", bodyClasses = None) {
-    <h1>Blockchain Hmrc poster</h1>
-foo bar
+    <h1>HMRC blockchain writer</h1>
+
+    <div id="writer">
+        @CSRF.formField
+        <input type="text" v-model="message" />
+        <button v-on="click: sendEvent">SEND EVENT</button>
+        <div>{{result}}</div>
+    </div>
+
+    <script>
+        var writer = new Vue({
+        el: '#writer',
+        data: {
+            message: '',
+            result: ''
+        },
+        methods: {
+            sendEvent: function(e) {
+                let csrf = $('input[name=csrfToken]').val()
+                let message = { "data": this.$data.message }
+
+                this.$http.post('/non-rep/events', message, {
+                    headers: {
+                        'content-type': 'application/json',
+                        'Csrf-Token': csrf
+                    }
+                }).then(response => {
+                    console.log(response)
+                    this.$data.result = response.statusText
+
+                }, response => {
+                    console.log(response)
+                });
+            }
+        }
+    })
+    </script>
 }
