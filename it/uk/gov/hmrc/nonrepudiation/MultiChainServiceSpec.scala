@@ -39,10 +39,7 @@ class MultiChainServiceSpec extends UnitSpec with WsTestClient with Eventually {
     "list published events" in {
       withClient { wsClient =>
         val uniqueString = UUID.randomUUID().toString
-//        val uniqueString = "c0ffeecafe2"
-//        val uniqueString = "c0ffeecafe3"
-//        val uniqueString = "not really unique"
-        val multiChainService = new MultiChainService(wsClient, "http://localhost:4272", "multichainrpc", "CoxcdVSWVBP9TR52V3Kmddm8jvzmNHn1VPPWfca6dSQb", "stream1")
+        val multiChainService = new MultiChainService(wsClient, "http://localhost:4272", "multichainrpc", "CoxcdVSWVBP9TR52V3Kmddm8jvzmNHn1VPPWfca6dSQb", "streamX")
         await(multiChainService.publishEvent(Event(uniqueString)))
         eventually {
           val events: Seq[Event] = await(multiChainService.list())

@@ -32,7 +32,7 @@ class MultiChainService(ws: WSClient,url: String, username: String, password: St
       // could be enhanced to go and fetch the large objects instead of skipping them
       val dataHexes = (resp.json \ "result" \\ "data").flatMap(_.asOpt[String])
       val datas = dataHexes.map(MultiChainService.decodeHex)
-      dataHexes.map(Event)
+      datas.map(Event)
     }
 
   private def jsonRpc(method: String, parameters: List[String]): Future[WSResponse] = {
