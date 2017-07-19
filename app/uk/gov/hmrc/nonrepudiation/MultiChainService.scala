@@ -47,11 +47,11 @@ class MultiChainService(ws: WSClient,url: String, username: String, password: St
   }
 
   def publishEvent(event: Event): Future[Unit] =
-    jsonRpc("publish", List(streamName, "key", MultiChainService.encodeHex(event.data))).flatMap { resp =>
+    jsonRpc("publish", List(streamName, "key", MultiChainService.encodeHex(event.data))).map { resp =>
       if (resp.status == 200)
-        Future.successful(())
+        ()
       else
-        Future.failed(new IllegalStateException(s"${resp.status} ${resp.statusText}"))
+        throw new IllegalStateException(s"${resp.status} ${resp.statusText}")
     }
 }
 
